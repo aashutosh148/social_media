@@ -8,7 +8,7 @@ module SocialMedia
       error!('Unauthorized', 401) unless current_user
     end
 
-    def is_admin?
+    def admin?
       error!('Forbidden', 403) unless current_user && (current_user.id == 5)
       puts current_user
     end

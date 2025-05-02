@@ -5,6 +5,11 @@ module SocialMedia
       format :json
     
       helpers AuthHelper
+      helpers do
+        def present_user(user)
+          present user, with: UserEntity
+        end
+      end
 
       resource :auth do
         desc 'User registration'
