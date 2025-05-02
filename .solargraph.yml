@@ -1,0 +1,8 @@
+include:
+  - "**/*.rb"
+  - "**/*.rake"
+exclude:
+  - tmp/**/*
+  - log/**/*
+reporters:
+  - rubocop

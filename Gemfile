@@ -36,6 +36,8 @@ group :development do
   gem 'annotate'                 # Model annotations
   gem 'bullet'                   # N+1 query detection
   gem 'listen', '~> 3.0.5'
+  gem 'ruby-lsp'
+  gem 'rubocop'
 
 end
 
@@ -65,3 +67,8 @@ gem "image_processing", "~> 1.2" # For ActiveStorage variants
 
 #API docs
 gem 'grape-swagger'
+
+gem 'grape_logging'
+
+gem 'colorize'
+gem "grape_on_rails_routes", "~> 0.3.2"

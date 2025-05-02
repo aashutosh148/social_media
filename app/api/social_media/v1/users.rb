@@ -3,12 +3,20 @@ module SocialMedia
     class Users < Grape::API
       version 'v1', using: :path
       format :json
-      
+      helpers SocialMedia::Helpers
+      helpers UserHelper
+
+      desc 'get all users'
       resource :users do
+        get "/all" do
+          authenticate!
+          User.all
+        end
+
         desc 'Get current user profile'
         get :me do
           authenticate!
-          current_user.as_json(except: :password_digest)
+          current_user_profile
         end
         
         desc 'Get user profile by ID'
@@ -16,10 +24,8 @@ module SocialMedia
           requires :id, type: Integer, desc: 'User ID'
         end
         get ':id' do
-          user = User.find(params[:id])
-          user.as_json(except: :password_digest)
-        rescue ActiveRecord::RecordNotFound
-          error!({ error: 'User not found' }, 404)
+          authenticate!
+          by_id
         end
         
         desc 'Update current user profile'
@@ -30,20 +36,7 @@ module SocialMedia
         end
         put :me do
           authenticate!
-          
-          update_params = {}
-          update_params[:username] = params[:username] if params[:username]
-          update_params[:bio] = params[:bio] if params[:bio]
-          
-          if params[:avatar]
-            current_user.avatar.attach(params[:avatar])
-          end
-          
-          if current_user.update(update_params)
-            current_user.as_json(except: :password_digest)
-          else
-            error!({ errors: current_user.errors.full_messages }, 422)
-          end
+          update_current
         end
         
         desc 'Follow a user'
@@ -52,24 +45,7 @@ module SocialMedia
         end
         post ':id/follow' do
           authenticate!
-          user_to_follow = User.find(params[:id])
-          
-          if current_user.id == user_to_follow.id
-            error!({ error: 'Cannot follow yourself' }, 422)
-          end
-          
-          follow = Follow.find_or_initialize_by(
-            follower: current_user,
-            following: user_to_follow
-          )
-          
-          if follow.new_record? && follow.save
-            { status: 'success', followed: true }
-          else
-            { status: 'success', followed: true, message: 'Already following' }
-          end
-        rescue ActiveRecord::RecordNotFound
-          error!({ error: 'User not found' }, 404)
+          follow_user
         end
         
         desc 'Unfollow a user'
@@ -78,16 +54,7 @@ module SocialMedia
         end
         delete ':id/follow' do
           authenticate!
-          follow = Follow.find_by(
-            follower_id: current_user.id,
-            following_id: params[:id]
-          )
-          
-          if follow && follow.destroy
-            { status: 'success', followed: false }
-          else
-            error!({ error: 'Not following this user' }, 404)
-          end
+          unfollow_user 
         end
         
         desc 'Get user followers'
@@ -95,21 +62,15 @@ module SocialMedia
           requires :id, type: Integer, desc: 'User ID'
         end
         get ':id/followers' do
-          user = User.find(params[:id])
-          user.followers.select(:id, :username, :bio, :avatar_url)
-        rescue ActiveRecord::RecordNotFound
-          error!({ error: 'User not found' }, 404)
+          all_followers
         end
-        
+
         desc 'Get user following'
         params do
           requires :id, type: Integer, desc: 'User ID'
         end
         get ':id/following' do
-          user = User.find(params[:id])
-          user.following.select(:id, :username, :bio, :avatar_url)
-        rescue ActiveRecord::RecordNotFound
-          error!({ error: 'User not found' }, 404)
+          all_followings
         end
       end
     end

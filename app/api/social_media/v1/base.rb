@@ -22,6 +22,7 @@ module SocialMedia
       mount SocialMedia::V1::Notifications
       
       # Health check endpoint
+      desc 'Health check'
       get :ping do
         { status: 'ok', time: Time.now }
       end
