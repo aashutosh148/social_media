@@ -12,7 +12,7 @@ module LikeHelper
         
         if post.user_id != current_user.id
           Notification.create(
-            recipient: post.user,
+            recipient: post.user_id,
             actor: current_user,
             action: 'liked',
             notifiable: post

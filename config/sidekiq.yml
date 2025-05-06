@@ -1,0 +1,11 @@
+# :verbose: false # Set to true for more detailed logging
+:concurrency: 5 # Number of threads per Sidekiq process. Adjust based on server resources.
+# :pidfile: ./tmp/pids/sidekiq.pid # Where to store the PID file
+# :logfile: ./log/sidekiq.log # Where to log output
+
+# Define queues and their priority (lower number = higher priority)
+# Default Rails mailers go to the 'mailers' queue
+:queues:
+  - [critical, 3] # Example high-priority queue
+  - [mailers, 2]  # Mailers queue
+  - [default, 1]  # Default queue for other jobs

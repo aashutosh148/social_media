@@ -38,7 +38,7 @@ group :development do
   gem 'listen', '~> 3.0.5'
   gem 'ruby-lsp'
   gem 'rubocop'
-
+  gem 'byebug'
 end
 
 group :test do
@@ -72,3 +72,8 @@ gem 'grape_logging'
 
 gem 'colorize'
 gem "grape_on_rails_routes", "~> 0.3.2"
+
+gem "will_paginate", "~> 4.0"
+
+
+gem "redis-rails", "~> 5.0"

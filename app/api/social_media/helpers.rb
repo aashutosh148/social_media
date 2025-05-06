@@ -1,7 +1,20 @@
 module SocialMedia
   module Helpers
+    include CacheHelper
+
     def current_user
-      @current_user ||= User.find(@current_user_id) if @current_user_id
+      return @current_user if defined?(@current_user)
+    
+      key = "auth/#{@current_user_id}"
+      cached = get_cache(key)
+      if cached
+        Rails.logger.info "Cache hit for current_user #{@current_user_id}"
+        @current_user = User.new(JSON.parse(cached))
+      else
+        @current_user = User.find(@current_user_id)
+        set_cache(key, JSON.dump(@current_user.as_json))
+      end
+      @current_user
     end
     
     def authenticate!

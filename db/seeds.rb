@@ -1,56 +1,112 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
-#   Character.create(name: 'Luke', movie: movies.first)
-# Create test users
-5.times do |i|
-  User.create!(
+require 'bcrypt'
+require 'faker'
+
+puts "Seeding started at #{Time.now}"
+
+# ---- USERS ----
+digest = BCrypt::Password.create('password')
+users = []
+
+puts "Creating users..."
+100_000.times do |i|
+  users << {
     username: "user#{i+1}",
     email: "user#{i+1}@example.com",
-    password: "password",
-    bio: "Bio for user #{i+1}"
-  )
-end
+    password_digest: digest,
+    bio: "Bio for user #{i+1}",
+    created_at: Time.now,
+    updated_at: Time.now
+  }
 
-# Create some follows
-users = User.all
-users.each do |user|
-  other_users = users - [user]
-  other_users.sample(2).each do |other_user|
-    Follow.create!(follower: user, following: other_user)
+  if users.size == 2000
+    User.insert_all(users)
+    puts "Inserted #{i+1} users"
+    users = []
   end
 end
+User.insert_all(users) unless users.empty?
+puts "Finished inserting users"
 
-# Create some posts
-users.each do |user|
-  3.times do |i|
-    Post.create!(
-      user: user,
-      content: "Post #{i+1} by #{user.username}: #{Faker::Lorem.paragraph}"
-    )
+user_ids = User.pluck(:id)
+
+# ---- FOLLOWS ----
+puts "Creating follows..."
+follows = []
+user_ids.each_with_index do |user_id, i|
+  sample_ids = user_ids.sample(3) - [user_id]
+  sample_ids.each do |follow_id|
+    follows << {
+      follower_id: user_id,
+      following_id: follow_id,
+      created_at: Time.now,
+      updated_at: Time.now
+    }
+  end
+
+  if follows.size >= 2000
+    Follow.insert_all(follows)
+    puts "Inserted follows for #{i+1} users"
+    follows = []
   end
 end
+Follow.insert_all(follows) unless follows.empty?
+puts "Finished inserting follows"
 
-# Add some comments and likes
-posts = Post.all
-users.each do |user|
-  posts.sample(5).each do |post|
-    # Add comments
-    Comment.create!(
-      user: user,
-      post: post,
-      content: Faker::Lorem.sentence
-    )
-    
-    # Add likes
-    Like.create!(
-      user: user,
-      post: post
-    )
+# ---- POSTS ----
+puts "Creating posts..."
+posts = []
+user_ids.each_with_index do |user_id, i|
+  2.times do
+    posts << {
+      user_id: user_id,
+      content: Faker::Lorem.paragraph,
+      created_at: Time.now,
+      updated_at: Time.now
+    }
+  end
+
+  if posts.size >= 2000
+    Post.insert_all(posts)
+    puts "Inserted posts for #{i+1} users"
+    posts = []
   end
 end
+Post.insert_all(posts) unless posts.empty?
+puts "Finished inserting posts"
 
-puts "Seed data created successfully!"
+post_ids = Post.pluck(:id)
+
+# ---- COMMENTS & LIKES ----
+puts "Creating comments and likes..."
+comments = []
+likes = []
+user_ids.each_with_index do |user_id, i|
+  post_ids.sample(5).each do |post_id|
+    comments << {
+      user_id: user_id,
+      post_id: post_id,
+      content: Faker::Lorem.sentence,
+      created_at: Time.now,
+      updated_at: Time.now
+    }
+
+    likes << {
+      user_id: user_id,
+      post_id: post_id,
+      created_at: Time.now,
+      updated_at: Time.now
+    }
+  end
+
+  if comments.size >= 2000
+    Comment.insert_all(comments)
+    Like.insert_all(likes)
+    puts "Inserted comments and likes for #{i+1} users"
+    comments = []
+    likes = []
+  end
+end
+Comment.insert_all(comments) unless comments.empty?
+Like.insert_all(likes) unless likes.empty?
+
+puts "Seeding completed successfully at #{Time.now}!"

@@ -10,13 +10,27 @@ module SocialMedia
       resource :users do
         get "/all" do
           authenticate!
-          User.all
+          # User.all
+          { status: "ok" }
         end
 
         desc 'Get current user profile'
         get :me do
           authenticate!
           current_user_profile
+        end
+
+        desc 'Search users by username'
+        params do
+          requires :query, type: String, desc: 'Username search query'
+          optional :page, type: Integer, desc: 'Page number', default: 1
+          optional :per_page, type: Integer, desc: 'Number of results per page', default: 10
+        end
+        get "/search" do
+          puts "Searching for username: #{params[:query]}"
+          # { status: "ok" }
+          # authenticate!
+          search_by_username
         end
         
         desc 'Get user profile by ID'
@@ -61,15 +75,17 @@ module SocialMedia
         params do
           requires :id, type: Integer, desc: 'User ID'
         end
-        get ':id/followers' do
+        get ':id/followers/:page' do
           all_followers
         end
 
         desc 'Get user following'
         params do
           requires :id, type: Integer, desc: 'User ID'
+          optional :page, type: Integer, desc: 'Page number', default: 1
+          optional :per_page, type: Integer, desc: 'Number of results per page', default: 10
         end
-        get ':id/following' do
+        get ':id/followings' do
           all_followings
         end
       end
